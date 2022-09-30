@@ -1,3 +1,4 @@
+from ast import While
 import pygame
 import math
 import random
@@ -87,38 +88,81 @@ def draw():
     win.blit(images[hangman_status],(150, 140))
     pygame.display.update()
 
-while run:
-    clock.tick(FPS)
+# Play again   
+def try_again():
+    global hangman_status
+    global guessed
+    global letters
+    button_x = 450
+    button_y = 350
+    go = True
+    while go:
+        win.fill(WHITE)
+        text = WORD_FONT.render("Do you want to play agian?", 1, BLACK)
+        win.blit(text, (WIDTH/2 - text.get_width()/2, HEIGHT/2 - text.get_height()/2))
+        # draw circle for Ok button
+        pygame.draw.circle(win, BLACK, (button_x, button_y), RADIUS *2, 3)
+        text = LETTER_FONT.render("Ok!", 1, BLACK)
+        win.blit(text, (button_x - text.get_width()/2, button_y - text.get_height()/2))
+        pygame.display.update()
+        for event in pygame.event.get():   
+            if event.type == pygame.QUIT:
+                go = False      
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                m_x, m_y = pygame.mouse.get_pos()                
+                dis = math.sqrt((button_x - m_x)**2 + (button_y - m_y)**2)
+                if dis < RADIUS:  
+                    guessed = []
+                    hangman_status = 0 
+                    for letter in letters:  
+                        letter[3] = True                
+                    main()
+            
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            m_x, m_y = pygame.mouse.get_pos()
-            for letter in letters:
-                x, y, ltr, visible = letter
-                if visible:
-                    dis = math.sqrt((x - m_x)**2 + (y - m_y)**2)
-                    if dis < RADIUS:
-                        letter[3] = False
-                        guessed.append(ltr)
-                        if ltr not in word:
-                            hangman_status += 1
 
-    draw()
-    won = True
-    for letter in word:
-        if letter not in guessed:
-            won = False
+   
+
+
+def main():
+    global hangman_status
+    FPS = 60
+    clock = pygame.time.Clock()
+    run = True
+    while run:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                m_x, m_y = pygame.mouse.get_pos()
+                for letter in letters:
+                    x, y, ltr, visible = letter
+                    if visible:
+                        dis = math.sqrt((x - m_x)**2 + (y - m_y)**2)
+                        if dis < RADIUS:
+                            letter[3] = False
+                            guessed.append(ltr)
+                            if ltr not in word:
+                                hangman_status += 1
+
+        
+        draw()
+        won = True
+        for letter in word:
+            if letter not in guessed:
+                won = False
+                break
+                
+        if won:
+            display_message("You WON!")
+            try_again()
             break
-            
-    if won:
-        display_message("You WON!")
-        break
 
-    if hangman_status == 6:
-        display_message("You LOST!")
-        break
-            
-
+        if hangman_status == 6:
+            display_message("You LOST!")
+            try_again()
+            break
+               
+main()
 pygame.quit()
